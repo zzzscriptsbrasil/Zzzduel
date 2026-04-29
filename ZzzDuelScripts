@@ -1,4 +1,4 @@
---// Zzz Scripts FINAL v2
+--// Zzz Scripts FINAL v7 (Compacto)
 
 local player = game.Players.LocalPlayer
 
@@ -8,39 +8,39 @@ gui.Parent = player:WaitForChild("PlayerGui")
 gui.ResetOnSpawn = false
 
 local frame = Instance.new("Frame", gui)
-frame.Size = UDim2.new(0,260,0,360) -- aumentei altura
+frame.Size = UDim2.new(0,240,0,300) -- menor ainda
 frame.Position = UDim2.new(0.3,0,0.3,0)
 frame.BackgroundColor3 = Color3.new(1,1,1)
 frame.BackgroundTransparency = 0.2
 frame.Active = true
 frame.Draggable = true
 
+Instance.new("UICorner", frame).CornerRadius = UDim.new(0,15)
 local stroke = Instance.new("UIStroke", frame)
 stroke.Color = Color3.new(1,1,1)
-stroke.Thickness = 2
 
-Instance.new("UICorner", frame).CornerRadius = UDim.new(0,15)
-
--- Title
+-- TITLE
 local title = Instance.new("TextLabel", frame)
-title.Size = UDim2.new(1,0,0,40)
+title.Size = UDim2.new(1,0,0,30)
 title.Text = "Zzz Scripts"
 title.BackgroundTransparency = 1
 title.TextColor3 = Color3.new(0,0,0)
 title.Font = Enum.Font.GothamBold
-title.TextSize = 18
+title.TextSize = 15
 
--- VARIABLES
+-- VARS
 local autoAttackOn = false
 local infJumpOn = false
 local pvpOn = false
+local autoPickupOn = false
+
 local startPos
 local line
 
--- TOGGLE UI
+-- SWITCH UI (mais compacto)
 function createSwitch(text, y, callback)
 	local holder = Instance.new("Frame", frame)
-	holder.Size = UDim2.new(0.9,0,0,40)
+	holder.Size = UDim2.new(0.9,0,0,30)
 	holder.Position = UDim2.new(0.05,0,0,y)
 	holder.BackgroundTransparency = 1
 	
@@ -50,18 +50,18 @@ function createSwitch(text, y, callback)
 	label.TextColor3 = Color3.new(0,0,0)
 	label.BackgroundTransparency = 1
 	label.Font = Enum.Font.Gotham
-	label.TextSize = 14
+	label.TextSize = 12
 	label.TextXAlignment = Enum.TextXAlignment.Left
 	
 	local toggle = Instance.new("Frame", holder)
-	toggle.Size = UDim2.new(0,50,0,25)
-	toggle.Position = UDim2.new(0.75,0,0.5,-12)
+	toggle.Size = UDim2.new(0,42,0,20)
+	toggle.Position = UDim2.new(0.75,0,0.5,-10)
 	toggle.BackgroundColor3 = Color3.fromRGB(200,200,200)
 	Instance.new("UICorner", toggle).CornerRadius = UDim.new(1,0)
 	
 	local circle = Instance.new("Frame", toggle)
-	circle.Size = UDim2.new(0,20,0,20)
-	circle.Position = UDim2.new(0,2,0.5,-10)
+	circle.Size = UDim2.new(0,16,0,16)
+	circle.Position = UDim2.new(0,2,0.5,-8)
 	circle.BackgroundColor3 = Color3.new(1,1,1)
 	Instance.new("UICorner", circle).CornerRadius = UDim.new(1,0)
 	
@@ -72,18 +72,18 @@ function createSwitch(text, y, callback)
 		
 		if enabled then
 			toggle.BackgroundColor3 = Color3.fromRGB(0,170,255)
-			circle:TweenPosition(UDim2.new(1,-22,0.5,-10),"Out","Quad",0.2,true)
+			circle:TweenPosition(UDim2.new(1,-18,0.5,-8),"Out","Quad",0.2,true)
 		else
 			toggle.BackgroundColor3 = Color3.fromRGB(200,200,200)
-			circle:TweenPosition(UDim2.new(0,2,0.5,-10),"Out","Quad",0.2,true)
+			circle:TweenPosition(UDim2.new(0,2,0.5,-8),"Out","Quad",0.2,true)
 		end
 		
 		callback(enabled)
 	end)
 end
 
--- REMOVE ANIMATION
-createSwitch("Remove Animation",50,function(state)
+-- POSIÇÕES MAIS JUNTAS (SEM BURACO)
+createSwitch("Remove Animation",35,function(state)
 	if state then
 		task.spawn(function()
 			while state do
@@ -99,8 +99,7 @@ createSwitch("Remove Animation",50,function(state)
 	end
 end)
 
--- PVP CAMERA + LINE
-createSwitch("PvP Camera",100,function(state)
+createSwitch("PvP Camera",70,function(state)
 	pvpOn = state
 	
 	local char = player.Character
@@ -125,20 +124,16 @@ createSwitch("PvP Camera",100,function(state)
 	if state then
 		task.spawn(function()
 			while pvpOn and line do
-				local currentPos = hrp.Position
-				local dist = (startPos - currentPos).Magnitude
-				
+				local dist = (startPos - hrp.Position).Magnitude
 				line.Size = Vector3.new(0.2,0.2,dist)
-				line.CFrame = CFrame.new(startPos, currentPos) * CFrame.new(0,0,-dist/2)
-				
+				line.CFrame = CFrame.new(startPos, hrp.Position) * CFrame.new(0,0,-dist/2)
 				task.wait()
 			end
 		end)
 	end
 end)
 
--- INFINITE JUMP
-createSwitch("Infinite Jump",150,function(state)
+createSwitch("Infinite Jump",105,function(state)
 	infJumpOn = state
 end)
 
@@ -146,13 +141,12 @@ game:GetService("UserInputService").JumpRequest:Connect(function()
 	if infJumpOn then
 		local char = player.Character
 		if char and char:FindFirstChild("HumanoidRootPart") then
-			char.HumanoidRootPart.Velocity = Vector3.new(0,50,0)
+			char.HumanoidRootPart.Velocity = Vector3.new(0,45,0)
 		end
 	end
 end)
 
--- AUTO ATTACK
-createSwitch("Auto Attack",200,function(state)
+createSwitch("Auto Attack",140,function(state)
 	autoAttackOn = state
 	
 	if state then
@@ -177,22 +171,59 @@ createSwitch("Auto Attack",200,function(state)
 					
 					if closest then
 						local target = closest.Character.HumanoidRootPart.Position
-						local dir = (target - hrp.Position).Unit
-						hrp.Velocity = dir * 60
+						hrp.CFrame = hrp.CFrame:Lerp(
+							CFrame.new(target + Vector3.new(0,0,2)),
+							0.25
+						)
 					end
 				end
-				task.wait(0.1)
+				task.wait(0.08)
 			end
 		end)
 	end
 end)
 
--- FOOTER
+createSwitch("Auto Pickup",175,function(state)
+	autoPickupOn = state
+	
+	if state then
+		task.spawn(function()
+			while autoPickupOn do
+				local char = player.Character
+				if char and char:FindFirstChild("HumanoidRootPart") then
+					local hrp = char.HumanoidRootPart
+					
+					for _,prompt in pairs(workspace:GetDescendants()) do
+						if prompt:IsA("ProximityPrompt") then
+							prompt.HoldDuration = 0
+							
+							local parent = prompt.Parent
+							local part = parent and (parent:IsA("BasePart") and parent or parent:FindFirstChildWhichIsA("BasePart"))
+							
+							if part then
+								local dist = (part.Position - hrp.Position).Magnitude
+								
+								if dist <= prompt.MaxActivationDistance then
+									pcall(function()
+										fireproximityprompt(prompt)
+									end)
+								end
+							end
+						end
+					end
+				end
+				task.wait(0.15)
+			end
+		end)
+	end
+end)
+
+-- FOOTER (COLADO CERTO)
 local footer = Instance.new("TextLabel", frame)
-footer.Size = UDim2.new(1,0,0,30)
-footer.Position = UDim2.new(0,0,1,-30)
+footer.Size = UDim2.new(1,0,0,20)
+footer.Position = UDim2.new(0,0,1,-20)
 footer.Text = "Feito Por Zzz.Oficial - Estamos Voltando!!"
 footer.BackgroundTransparency = 1
 footer.TextColor3 = Color3.new(0,0,0)
 footer.Font = Enum.Font.Gotham
-footer.TextSize = 12
+footer.TextSize = 10
