@@ -1,0 +1,198 @@
+--// Zzz Scripts FINAL v2
+
+local player = game.Players.LocalPlayer
+
+-- GUI
+local gui = Instance.new("ScreenGui")
+gui.Parent = player:WaitForChild("PlayerGui")
+gui.ResetOnSpawn = false
+
+local frame = Instance.new("Frame", gui)
+frame.Size = UDim2.new(0,260,0,360) -- aumentei altura
+frame.Position = UDim2.new(0.3,0,0.3,0)
+frame.BackgroundColor3 = Color3.new(1,1,1)
+frame.BackgroundTransparency = 0.2
+frame.Active = true
+frame.Draggable = true
+
+local stroke = Instance.new("UIStroke", frame)
+stroke.Color = Color3.new(1,1,1)
+stroke.Thickness = 2
+
+Instance.new("UICorner", frame).CornerRadius = UDim.new(0,15)
+
+-- Title
+local title = Instance.new("TextLabel", frame)
+title.Size = UDim2.new(1,0,0,40)
+title.Text = "Zzz Scripts"
+title.BackgroundTransparency = 1
+title.TextColor3 = Color3.new(0,0,0)
+title.Font = Enum.Font.GothamBold
+title.TextSize = 18
+
+-- VARIABLES
+local autoAttackOn = false
+local infJumpOn = false
+local pvpOn = false
+local startPos
+local line
+
+-- TOGGLE UI
+function createSwitch(text, y, callback)
+	local holder = Instance.new("Frame", frame)
+	holder.Size = UDim2.new(0.9,0,0,40)
+	holder.Position = UDim2.new(0.05,0,0,y)
+	holder.BackgroundTransparency = 1
+	
+	local label = Instance.new("TextLabel", holder)
+	label.Size = UDim2.new(0.6,0,1,0)
+	label.Text = text
+	label.TextColor3 = Color3.new(0,0,0)
+	label.BackgroundTransparency = 1
+	label.Font = Enum.Font.Gotham
+	label.TextSize = 14
+	label.TextXAlignment = Enum.TextXAlignment.Left
+	
+	local toggle = Instance.new("Frame", holder)
+	toggle.Size = UDim2.new(0,50,0,25)
+	toggle.Position = UDim2.new(0.75,0,0.5,-12)
+	toggle.BackgroundColor3 = Color3.fromRGB(200,200,200)
+	Instance.new("UICorner", toggle).CornerRadius = UDim.new(1,0)
+	
+	local circle = Instance.new("Frame", toggle)
+	circle.Size = UDim2.new(0,20,0,20)
+	circle.Position = UDim2.new(0,2,0.5,-10)
+	circle.BackgroundColor3 = Color3.new(1,1,1)
+	Instance.new("UICorner", circle).CornerRadius = UDim.new(1,0)
+	
+	local enabled = false
+	
+	toggle.InputBegan:Connect(function()
+		enabled = not enabled
+		
+		if enabled then
+			toggle.BackgroundColor3 = Color3.fromRGB(0,170,255)
+			circle:TweenPosition(UDim2.new(1,-22,0.5,-10),"Out","Quad",0.2,true)
+		else
+			toggle.BackgroundColor3 = Color3.fromRGB(200,200,200)
+			circle:TweenPosition(UDim2.new(0,2,0.5,-10),"Out","Quad",0.2,true)
+		end
+		
+		callback(enabled)
+	end)
+end
+
+-- REMOVE ANIMATION
+createSwitch("Remove Animation",50,function(state)
+	if state then
+		task.spawn(function()
+			while state do
+				local char = player.Character
+				if char and char:FindFirstChild("Humanoid") then
+					for _,v in pairs(char.Humanoid:GetPlayingAnimationTracks()) do
+						v:Stop()
+					end
+				end
+				task.wait(0.2)
+			end
+		end)
+	end
+end)
+
+-- PVP CAMERA + LINE
+createSwitch("PvP Camera",100,function(state)
+	pvpOn = state
+	
+	local char = player.Character
+	if not char then return end
+	local hrp = char:FindFirstChild("HumanoidRootPart")
+	if not hrp then return end
+	
+	if state then
+		workspace.CurrentCamera.FieldOfView = 100
+		startPos = hrp.Position
+		
+		line = Instance.new("Part", workspace)
+		line.Anchored = true
+		line.CanCollide = false
+		line.Color = Color3.new(0,1,0)
+		line.Material = Enum.Material.Neon
+	else
+		workspace.CurrentCamera.FieldOfView = 70
+		if line then line:Destroy() end
+	end
+	
+	if state then
+		task.spawn(function()
+			while pvpOn and line do
+				local currentPos = hrp.Position
+				local dist = (startPos - currentPos).Magnitude
+				
+				line.Size = Vector3.new(0.2,0.2,dist)
+				line.CFrame = CFrame.new(startPos, currentPos) * CFrame.new(0,0,-dist/2)
+				
+				task.wait()
+			end
+		end)
+	end
+end)
+
+-- INFINITE JUMP
+createSwitch("Infinite Jump",150,function(state)
+	infJumpOn = state
+end)
+
+game:GetService("UserInputService").JumpRequest:Connect(function()
+	if infJumpOn then
+		local char = player.Character
+		if char and char:FindFirstChild("HumanoidRootPart") then
+			char.HumanoidRootPart.Velocity = Vector3.new(0,50,0)
+		end
+	end
+end)
+
+-- AUTO ATTACK
+createSwitch("Auto Attack",200,function(state)
+	autoAttackOn = state
+	
+	if state then
+		task.spawn(function()
+			while autoAttackOn do
+				local char = player.Character
+				if char and char:FindFirstChild("HumanoidRootPart") then
+					local hrp = char.HumanoidRootPart
+					
+					local closest
+					local dist = math.huge
+					
+					for _,p in pairs(game.Players:GetPlayers()) do
+						if p ~= player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+							local d = (p.Character.HumanoidRootPart.Position - hrp.Position).Magnitude
+							if d < dist then
+								dist = d
+								closest = p
+							end
+						end
+					end
+					
+					if closest then
+						local target = closest.Character.HumanoidRootPart.Position
+						local dir = (target - hrp.Position).Unit
+						hrp.Velocity = dir * 60
+					end
+				end
+				task.wait(0.1)
+			end
+		end)
+	end
+end)
+
+-- FOOTER
+local footer = Instance.new("TextLabel", frame)
+footer.Size = UDim2.new(1,0,0,30)
+footer.Position = UDim2.new(0,0,1,-30)
+footer.Text = "Feito Por Zzz.Oficial - Estamos Voltando!!"
+footer.BackgroundTransparency = 1
+footer.TextColor3 = Color3.new(0,0,0)
+footer.Font = Enum.Font.Gotham
+footer.TextSize = 12
